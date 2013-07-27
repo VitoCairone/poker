@@ -48,6 +48,7 @@ class Poker
   end
 
   def betting_round
+    zero_all_bets
     players_in = @players.select { |player| !player.folded }
     return if players_in.count == 1
     start_bet = @bet_to_match
@@ -58,11 +59,11 @@ class Poker
       players_in.select! { |player| !player.folded }
       break unless players_in.all? { |player| player.bet == @bet_to_match }
     end
-    zero_all_bets
   end
 
-  def play(num_players)
-    @players = Array.new(num_players) { Player.new(self, 1000) }
+  def play_hand
+    @deck = Deck.new
+    @players.each { |player| player.hand = Hand.new }
     deal = Proc.new { |player| @deck.deal(player, 2) }
     @players.each(&deal)
     betting_round
@@ -71,18 +72,29 @@ class Poker
     @players.each { |player| @deck.deal(player, 1) }
     betting_round
     showdown!
+    @players.select! { |player| player.chips > 0}
+  end
+
+  def run(run_players)
+    @players = Array.new(num_players) { Player.new(self, 1000, "Bob") }
+    while @players.count > 1
+      play_hand
+    end
   end
 
   def showdown!
     players_in = @players.select { |player| !player.folded }
-    winner = nil
-    best_hand = -1
+    winner = players_in.first
+    best_hand = players_in.first.hand
     players_in.each_with_index do |player, idx|
-      if player.hand.hand_rank.first > best_hand
+      if player.hand > best_hand
         winner = player
-        best_hand = player.hand.hand_rank
+        best_hand = player.hand
       end
     end
+    puts "#{winner.name} won the round with #{best_hand.hand_type}"
+    winner.chips += @pot
+    @pot = 0
   end
 
   def zero_all_bets
@@ -103,13 +115,14 @@ end
 class Player
 
   attr_reader :hand, :chips, :folded
-  attr_accessor :bet
+  attr_accessor :bet, :name
 
-  def initialize(game, chips)
+  def initialize(game, chips, name)
     @game, @chips = game, chips
     @hand = Hand.new
     @bet = 0
     @folded = false
+    @name = name
   end
 
   def bet(increase)
@@ -143,6 +156,10 @@ class Player
       puts e.message
       retry
     end
+  end
+
+  def rename(name)
+    self.name = "Bob"
   end
 
 end
