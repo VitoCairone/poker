@@ -25,15 +25,15 @@ end
 class Poker
   attr_accessor :pot, :bet_to_match
   attr_reader :deck
-  RANK_HASH = {:high_card => 0
-               :pair => 1
-               :two_pair => 2
-               :three_of_a_kind => 3
-               :straight => 4
-               :flush => 5
-               :full_house => 6
-               :four_of_a_kind => 7
-               :straight_flush => 8
+  RANK_HASH = {:high_card => 0,
+               :pair => 1,
+               :two_pair => 2,
+               :three_of_a_kind => 3,
+               :straight => 4,
+               :flush => 5,
+               :full_house => 6,
+               :four_of_a_kind => 7,
+               :straight_flush => 8,
                :royal_flush => 9}
 
   def initialize
@@ -75,7 +75,7 @@ class Poker
     @players.select! { |player| player.chips > 0}
   end
 
-  def run(run_players)
+  def run(num_players)
     @players = Array.new(num_players) { Player.new(self, 1000, "Bob") }
     while @players.count > 1
       play_hand
@@ -114,8 +114,8 @@ end
 
 class Player
 
-  attr_reader :hand, :chips, :folded
-  attr_accessor :bet, :name
+  attr_reader :chips, :folded
+  attr_accessor :hand, :bet, :name
 
   def initialize(game, chips, name)
     @game, @chips = game, chips
@@ -130,7 +130,7 @@ class Player
       raise InvalidBetError.new "You can't bet that amount"
     end
     if (@bet + increase) < @game.bet_to_match
-      raise InvalidBetError.new "Bet more, wuss"
+      raise InvalidBetError.new "Bet at least #{@game.bet_to_match - @bet} or fold."
     end
 
     @bet += increase
